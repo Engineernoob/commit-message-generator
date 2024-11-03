@@ -69,8 +69,8 @@ function App() {
   };
 
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: 3 }}>
-      <Typography variant="h4" component="h1" gutterBottom>
+    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: 3, backgroundColor: '#1e1e1e', height: '100vh' }}>
+      <Typography variant="h4" component="h1" gutterBottom style={{ color: '#ffcc00', fontFamily: 'Courier New' }}>
         Commit Message Quest
       </Typography>
 
@@ -78,12 +78,14 @@ function App() {
         variant="outlined"
         sx={{
           width: '100%',
-          maxWidth: 500,
+          maxWidth: 600,
           height: 400,
           overflowY: 'auto',
           padding: 2,
           marginBottom: 2,
           backgroundColor: '#333',
+          borderRadius: 2,
+          boxShadow: '0px 4px 12px rgba(0, 0, 0, 0.5)',
         }}
       >
         <Stack spacing={2}>
@@ -95,11 +97,14 @@ function App() {
                 backgroundColor: getMessageColor(msg.type),
                 display: 'flex',
                 alignItems: 'center',
+                padding: 1,
+                borderRadius: 1,
+                margin: '5px 0',
               }}
             >
               <CardContent sx={{ display: 'flex', alignItems: 'center', padding: 1 }}>
                 <Box sx={{ marginRight: 1 }}>{getMessageIcon(msg.type)}</Box>
-                <Typography sx={{ color: '#333' }}>{msg.text}</Typography>
+                <Typography sx={{ color: '#333', fontFamily: 'Courier New' }}>{msg.text}</Typography>
               </CardContent>
             </Card>
           ))}
@@ -114,14 +119,17 @@ function App() {
         value={input}
         onChange={(e) => setInput(e.target.value)}
         onKeyDown={(e) => e.key === 'Enter' && handleCommand()}
-        sx={{ maxWidth: 500, marginBottom: 2 }}
+        sx={{ maxWidth: 600, marginBottom: 2, input: { color: '#e0e0e0' }, backgroundColor: '#444', borderRadius: 1 }}
+        InputLabelProps={{
+          style: { color: '#e0e0e0' },
+        }}
       />
       
       <Button
         variant="contained"
         color="primary"
         onClick={handleCommand}
-        sx={{ maxWidth: 500 }}
+        sx={{ maxWidth: 600, fontSize: '1rem', backgroundColor: '#ffcc00', '&:hover': { backgroundColor: '#ffb300' } }}
       >
         Execute Command
       </Button>
