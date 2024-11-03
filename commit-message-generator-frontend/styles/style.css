@@ -1,0 +1,19 @@
+/* style.css */
+
+body {
+    background-color: #1e1e1e;
+    color: #e0e0e0;
+    font-family: 'Courier New', Courier, monospace;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+  }
+  
+  #root {
+    width: 100%;
+    max-width: 600px;
+    padding: 20px;
+  }
+  
