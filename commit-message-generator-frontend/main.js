@@ -37,7 +37,7 @@ ipcMain.handle('generate-commit-message', async (event, commitType, customMessag
   return new Promise((resolve, reject) => {
     // Spawn Python process
     const pythonProcess = spawn('python', [
-      'path/to/commit_tool.py', // Update with the actual path to your Python script
+      '/Users/taahirahdenmark/Documents/Commit-Message/git-commit-ai/backend/commit_cli.py', // Update with the actual path to your Python script
       '--generate',
       `--type=${commitType}`,
       `--message=${customMessage}`
