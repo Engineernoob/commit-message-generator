@@ -1,8 +1,12 @@
 from transformers import pipeline
 from git import Repo
+import torch
 
-# Initialize a text generation pipeline
-generator = pipeline('text-generation', model='distilgpt2')
+# Check if a GPU is available
+device = 0 if torch.cuda.is_available() else -1
+
+# Initialize a text generation pipeline with the device set for GPU or CPU
+generator = pipeline('text-generation', model='distilgpt2', device=device)
 
 def generate_commit_message(commit_type, custom_message, language, framework, diff_summary):
     """
