@@ -4,10 +4,14 @@ function Options({ onGenerate }) {
   const [commitType, setCommitType] = useState('feat');
   const [customMessage, setCustomMessage] = useState('');
 
-  const handleGenerate = () => {
-    // TODO: Call backend with options and generate message
-    const generatedMessage = `${commitType}: ${customMessage}`;
-    onGenerate(generatedMessage);
+  const handleGenerate = async () => {
+    // Call backend function via preload.js API
+    try {
+      const generatedMessage = await window.api.generateCommitMessage(commitType, customMessage);
+      onGenerate(generatedMessage);
+    } catch (error) {
+      console.error("Error generating commit message:", error);
+    }
   };
 
   return (
