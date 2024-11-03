@@ -1,7 +1,6 @@
+import argparse
 import os
 import json
-import argparse
-
 from model import generate_commit_message, get_git_changes, analyze_diff  # Import functions from model.py
 from utils import save_common_message, get_similar_message, log_error
 
@@ -49,6 +48,37 @@ def interactive_commit_review(messages):
         print("Invalid choice, using the first message as default.")
         return messages[0]
 
+def generate_commit_message_for_frontend(commit_type, custom_message):
+    """
+    Generates a commit message for use in the Flask app.
+
+    Parameters:
+    - commit_type: The type of the commit (e.g., feat, fix, chore).
+    - custom_message: A custom message provided by the user.
+
+    Returns:
+    A generated commit message string.
+    """
+    # Load the configuration
+    config = load_config()
+    language = config.get("language", "Unknown")
+    framework = config.get("framework", "Unknown")
+
+    # Retrieve Git changes if required
+    changes = get_git_changes()
+    diff_summary = changes[0]["diff"] if changes else "general updates"
+
+    # Generate the commit message
+    commit_message = generate_commit_message(
+        commit_type=commit_type,
+        custom_message=custom_message,
+        language=language,
+        framework=framework,
+        diff_summary=diff_summary,
+        length="brief"
+    )
+
+    return commit_message
 
 def main():
     parser = argparse.ArgumentParser(description="Generate AI-based git commit messages.")
