@@ -1,7 +1,8 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
-from model import generate_commit_message, get_git_changes  # Import functions from model.py
+from model import generate_commit_message, get_git_changes # Import functions from model.py
 from commit_cli import load_config  # Import the config loading function from commit_cli.py
+
 
 app = Flask(__name__)
 CORS(app)  # Enable CORS to allow requests from the frontend
