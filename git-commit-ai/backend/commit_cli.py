@@ -24,6 +24,11 @@ def setup_config():
         json.dump(config, f)
     return config
 
+def reconfigure():
+    os.remove(CONFIG_FILE)
+    print("Reconfiguring...")
+    return setup_config()
+
 # Main function to handle CLI interaction
 def main():
     parser = argparse.ArgumentParser(description="Generate AI-based git commit messages.")
