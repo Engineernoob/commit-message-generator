@@ -4,6 +4,8 @@ import ErrorIcon from '@mui/icons-material/Error';
 import PersonIcon from '@mui/icons-material/Person';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 
+const BACKEND_URL = 'http://localhost:5000'; // Update this to match your backend's URL
+
 function App() {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
@@ -20,7 +22,20 @@ function App() {
       if (command === '/generate') {
         const commitType = args[0] || 'feat';
         const customMessage = args.slice(1).join(' ') || '';
-        response = `Generated Commit Message: [${commitType}] ${customMessage}`;
+
+        // Send a POST request to the Flask backend
+        const res = await fetch(`${BACKEND_URL}/generateCommitMessage`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ commitType, customMessage }),
+        });
+
+        if (res.ok) {
+          const data = await res.json();
+          response = `Generated Commit Message: ${data.commitMessage}`;
+        } else {
+          response = 'Error generating commit message.';
+        }
       } else if (command === '/help') {
         response = "Commands: /generate [type] [message], /help";
       } else {
