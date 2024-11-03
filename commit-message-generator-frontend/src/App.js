@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { TextField, Button, Typography, Paper, Box, Stack } from '@mui/material';
+import '../styles/App.css'
 
 function App() {
   const [messages, setMessages] = useState([]);
