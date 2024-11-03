@@ -9,20 +9,33 @@ device = 0 if torch.cuda.is_available() else -1
 # Initialize a text generation pipeline with the device set for GPU or CPU
 generator = pipeline('text-generation', model='distilgpt2', device=device)
 
-def generate_commit_message(commit_type, custom_message, language, framework, diff_summary):
+def generate_commit_message(commit_type, custom_message, language, framework, diff_summary, length="brief"):
     """
-    Generates a commit message based on the commit type, optional custom message, 
-    project language and framework, and diff summary.
+    Generates a commit message based on the commit type, optional custom message,
+    project language and framework, diff summary, and message length.
+    
+    Parameters:
+    - commit_type: Type of commit (e.g., feat, fix, chore).
+    - custom_message: Optional custom message provided by the user.
+    - language: The primary language of the project (e.g., Python, JavaScript).
+    - framework: The framework used in the project (e.g., Flask, React).
+    - diff_summary: Summary of changes from the diff.
+    - length: Length of the message (either "brief" or "detailed"). Default is "brief".
+    
+    Returns:
+    A generated commit message as a string.
     """
     if custom_message:
         # Use custom message if provided
         return f"{commit_type}: {custom_message}"
     else:
-        # Generate a message based on diff summary if no custom message provided
-        prompt = f"Generate a {commit_type} commit message for a {language} {framework} project: {diff_summary}"
-        result = generator(prompt, max_length=50, num_return_sequences=1)
+        # Customize prompt based on commit type and length
+        length_prompt = "a brief" if length == "brief" else "a detailed"
+        prompt = f"Generate {length_prompt} {commit_type} commit message for a {language} {framework} project: {diff_summary}"
+        
+        # Generate the commit message
+        result = generator(prompt, max_length=100 if length == "detailed" else 50, num_return_sequences=1)
         return result[0]["generated_text"]
-
 
 def find_repo_root():
     """
@@ -51,7 +64,8 @@ def get_git_changes():
     for item in repo.index.diff(None):  # None indicates unstaged changes
         file_path = item.a_path
         diff = repo.git.diff(file_path)  # Retrieve the diff for this file
-        changes.append({"file": file_path, "diff": diff})
+        diff_summary = analyze_diff(diff)  # Summarize the diff
+        changes.append({"file": file_path, "diff": diff_summary})
 
     return changes
 
@@ -91,6 +105,7 @@ if __name__ == "__main__":
             custom_message="",  # Leave blank to use AI generation
             language="Python",
             framework="Flask",
-            diff_summary=change["diff"]
+            diff_summary=change["diff"],
+            length="brief"  # Can change to "detailed" for a longer message
         )
         print(f"Suggested commit message for {change['file']}:\n{commit_message}\n")
