@@ -22,6 +22,11 @@ function Options({ onGenerate }) {
           <option value="feat">Feature</option>
           <option value="fix">Fix</option>
           <option value="chore">Chore</option>
+          <option value="docs">Documentation</option>
+          <option value="style">Style</option>
+          <option value="refactor">Refactor</option>
+          <option value="perf">Performance</option>
+          <option value="test">Test</option>
         </select>
       </label>
       <input
