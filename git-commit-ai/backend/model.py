@@ -1,6 +1,7 @@
 from transformers import pipeline
 from git import Repo
 import torch
+import os
 
 # Check if a GPU is available
 device = 0 if torch.cuda.is_available() else -1
@@ -22,20 +23,35 @@ def generate_commit_message(commit_type, custom_message, language, framework, di
         result = generator(prompt, max_length=50, num_return_sequences=1)
         return result[0]["generated_text"]
 
+
+def find_repo_root():
+    """
+    Finds the Git repository root by moving up directories until a `.git` folder is found.
+    Raises an exception if the repository root is not found.
+    """
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    while current_dir != '/':  # Stop at the root directory if `.git` is not found
+        if '.git' in os.listdir(current_dir):
+            return current_dir
+        current_dir = os.path.dirname(current_dir)
+    raise Exception("Git repository root not found")
+
+# Initialize the repository with the dynamically found path
+repo_path = find_repo_root()
+repo = Repo(repo_path)
+
 def get_git_changes():
     """
     Retrieves unstaged changes with diffs for the current Git repository.
     Returns a list of dictionaries with file paths and diff summaries.
     """
-    repo = Repo('.')  # Initialize the repository in the current directory
     changes = []
 
     # Get unstaged changes by checking the diff
     for item in repo.index.diff(None):  # None indicates unstaged changes
         file_path = item.a_path
         diff = repo.git.diff(file_path)  # Retrieve the diff for this file
-        diff_summary = analyze_diff(diff)  # Summarize the diff
-        changes.append({"file": file_path, "diff": diff_summary})
+        changes.append({"file": file_path, "diff": diff})
 
     return changes
 
