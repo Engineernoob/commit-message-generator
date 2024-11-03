@@ -5,7 +5,7 @@ from commit_cli import load_config  # Import the config loading function from co
 
 
 app = Flask(__name__)
-CORS(app)  # Enable CORS to allow requests from the frontend
+CORS(app, origins=["http://localhost:3000"]) # Enable CORS to allow requests from the frontend
 
 # Endpoint to handle commit message generation
 @app.route('/generateCommitMessage', methods=['POST'])
