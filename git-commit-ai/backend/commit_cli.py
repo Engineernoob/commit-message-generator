@@ -1,6 +1,8 @@
 import os
 import json
 import argparse
+
+from numpy import common_type
 from model import generate_commit_message, get_git_changes, analyze_diff  # Import functions from model.py
 from utils import save_common_message, get_similar_message, log_error
 
@@ -53,6 +55,8 @@ def main():
     parser = argparse.ArgumentParser(description="Generate AI-based git commit messages.")
     parser.add_argument("--generate", action="store_true", help="Generate a commit message based on changes")
     parser.add_argument("--setup", action="store_true", help="Set up or reconfigure project settings")
+    parser.add_argument('--type', type=str, required=True, help="Commit type (feat, fix, chore, etc.)")
+    parser.add_argument('--message', type=str, required=False, help="Custom message")
     args = parser.parse_args()
 
     config = load_config() if not args.setup else setup_config()
@@ -60,8 +64,16 @@ def main():
     framework = config.get("framework", "Unknown")
 
     if args.generate:
-        commit_type = input("Enter commit type (e.g., feat, fix, chore): ")
-        length = input("Message length (brief/detailed): ")
+         # Generate the commit message using the provided arguments
+        commit_message = generate_commit_message(
+            commit_type=args.type,
+            custom_message=args.message if args.message else "",
+            language="Python",
+            framework="Flask",
+            diff_summary="general updates",  # Adjust if needed
+            length="brief"
+        )
+        print(commit_message)  # Print to stdout for Electron to capture
 
         try:
             changes = get_git_changes()
@@ -77,12 +89,12 @@ def main():
                         selected_message = saved_message
                     else:
                         selected_message = generate_commit_message(
-                            commit_type, "", language, framework, context_summary, length
+                            args.type, "", language, framework, context_summary, "brief"
                         )
                         save_common_message(context_summary, selected_message)
                 else:
                     selected_message = generate_commit_message(
-                        commit_type, "", language, framework, context_summary, length
+                        args.type, "", language, framework, context_summary, "brief"
                     )
                     save_common_message(context_summary, selected_message)
 
