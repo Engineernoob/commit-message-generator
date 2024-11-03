@@ -8,13 +8,15 @@ function createWindow() {
     height: 600,
     webPreferences: {
       preload: path.join(__dirname, 'preload.js'),
-      nodeIntegration: true,
-      contextIsolation: false,
+      nodeIntegration: false,      // Ensures security by disabling Node integration in the renderer
+      contextIsolation: true,      // Enables contextIsolation to use contextBridge
+      enableRemoteModule: false,   // Improves security by disabling remote module in renderer
     },
   });
 
   mainWindow.loadFile('public/index.html');
 }
+
 
 app.on('ready', createWindow);
 

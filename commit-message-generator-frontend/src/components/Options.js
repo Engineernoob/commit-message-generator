@@ -4,8 +4,14 @@ function Options({ onGenerate }) {
   const [commitType, setCommitType] = useState('feat');
   const [customMessage, setCustomMessage] = useState('');
 
-  const handleGenerate = () => {
-    onGenerate(commitType, customMessage);
+  const handleGenerate = async () => {
+    try {
+      // Call the backend function exposed in preload.js
+      const generatedMessage = await window.api.generateCommitMessage(commitType, customMessage);
+      onGenerate(generatedMessage);
+    } catch (error) {
+      console.error("Error generating commit message:", error);
+    }
   };
 
   return (
@@ -30,4 +36,3 @@ function Options({ onGenerate }) {
 }
 
 export default Options;
-
