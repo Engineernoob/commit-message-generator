@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
-import { TextField, Button, Typography, Paper, Box, Stack } from '@mui/material';
-import '../styles/App.css'
+import { TextField, Button, Typography, Paper, Box, Stack, Card, CardContent } from '@mui/material';
+import ErrorIcon from '@mui/icons-material/Error';
+import PersonIcon from '@mui/icons-material/Person';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 
 function App() {
   const [messages, setMessages] = useState([]);
@@ -44,6 +46,18 @@ function App() {
     setInput('');  // Clear the input field
   };
 
+  const getMessageIcon = (type) => {
+    if (type === 'error') return <ErrorIcon color="error" />;
+    if (type === 'system') return <CheckCircleIcon color="success" />;
+    return <PersonIcon color="primary" />;
+  };
+
+  const getMessageColor = (type) => {
+    if (type === 'error') return '#ffcccc';
+    if (type === 'system') return '#ccffcc';
+    return '#cce5ff';
+  };
+
   return (
     <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: 3 }}>
       <Typography variant="h4" component="h1" gutterBottom>
@@ -60,19 +74,26 @@ function App() {
           padding: 2,
           marginBottom: 2,
           backgroundColor: '#333',
-          color: '#e0e0e0',
         }}
       >
         <Stack spacing={2}>
           {messages.map((msg, index) => (
-            <Typography
+            <Card
               key={index}
+              variant="outlined"
               sx={{
-                color: msg.type === 'error' ? '#ff3333' : msg.type === 'system' ? '#00ff00' : '#00ccff',
+                backgroundColor: getMessageColor(msg.type),
+                display: 'flex',
+                alignItems: 'center',
               }}
             >
-              {msg.type === 'error' ? '⚠️ Enemy Encounter: ' : ''}{msg.text}
-            </Typography>
+              <CardContent sx={{ display: 'flex', alignItems: 'center', padding: 1 }}>
+                <Box sx={{ marginRight: 1 }}>{getMessageIcon(msg.type)}</Box>
+                <Typography sx={{ color: '#333' }}>
+                  {msg.type === 'error' ? '⚠️ ' : ''}{msg.text}
+                </Typography>
+              </CardContent>
+            </Card>
           ))}
         </Stack>
       </Paper>
