@@ -1,7 +1,7 @@
 import os
 import json
 import argparse
-from model import generate_commit_message, get_git_changes  # Import functions from model.py
+from model import generate_commit_message, get_git_changes, analyze_diff  # Import functions from model.py
 
 # Configuration file path
 CONFIG_FILE = "config.json"
@@ -29,7 +29,25 @@ def reconfigure():
     print("Reconfiguring...")
     return setup_config()
 
-# Main function to handle CLI interaction
+def interactive_commit_review(messages):
+    """
+    Displays multiple commit message suggestions and allows the user to choose, modify, or regenerate messages.
+    Returns the user's selected or modified message.
+    """
+    for idx, message in enumerate(messages, start=1):
+        print(f"\nSuggested Commit Message {idx}:\n{message}")
+
+    choice = input("\nChoose a commit message by number, or type 'r' to regenerate: ")
+
+    if choice.isdigit() and 1 <= int(choice) <= len(messages):
+        return messages[int(choice) - 1]
+    elif choice.lower() == 'r':
+        return None  # Indicate regeneration needed
+    else:
+        print("Invalid choice, using the first message as default.")
+        return messages[0]
+
+
 def main():
     parser = argparse.ArgumentParser(description="Generate AI-based git commit messages.")
     parser.add_argument("--generate", action="store_true", help="Generate a commit message based on changes")
@@ -37,34 +55,29 @@ def main():
     args = parser.parse_args()
 
     # Load or reconfigure configuration
-    if args.setup:
-        config = setup_config()
-    else:
-        config = load_config()
-
-    # Load config parameters for language and framework
+    config = load_config() if not args.setup else setup_config()
     language = config.get("language", "Unknown")
     framework = config.get("framework", "Unknown")
 
     if args.generate:
-        # Prompt user for commit preferences
         commit_type = input("Enter commit type (e.g., feat, fix, chore): ")
-        custom_message = input("Enter a custom message (or leave blank for auto generation): ")
+        length = input("Message length (brief/detailed): ")
 
-        # Retrieve unstaged changes
+        # Retrieve unstaged changes and generate multiple commit messages
         changes = get_git_changes()
-        
-        # Generate commit messages
         for change in changes:
-            # Generate the commit message using model.py logic
-            commit_message = generate_commit_message(
-                commit_type=commit_type,
-                custom_message=custom_message,
-                language=language,
-                framework=framework,
-                diff_summary=change["diff"]
-            )
-            print(f"Suggested commit message for {change['file']}:\n{commit_message}\n")
+            diff_summary = analyze_diff(change["diff"])
+            initial_messages = [
+                generate_commit_message(commit_type, "", language, framework, diff_summary, length)
+                for _ in range(3)
+            ]  # Generate 3 variations
+
+            # Interactive review
+            selected_message = None
+            while selected_message is None:
+                selected_message = interactive_commit_review(initial_messages)
+            
+            print(f"\nFinalized Commit Message:\n{selected_message}")
 
 if __name__ == "__main__":
     main()
