@@ -2,6 +2,7 @@ import os
 import json
 import argparse
 from model import generate_commit_message, get_git_changes, analyze_diff  # Import functions from model.py
+from utils import save_common_message, get_similar_message, log_error
 
 # Configuration file path
 CONFIG_FILE = "config.json"
@@ -54,7 +55,6 @@ def main():
     parser.add_argument("--setup", action="store_true", help="Set up or reconfigure project settings")
     args = parser.parse_args()
 
-    # Load or reconfigure configuration
     config = load_config() if not args.setup else setup_config()
     language = config.get("language", "Unknown")
     framework = config.get("framework", "Unknown")
@@ -63,21 +63,34 @@ def main():
         commit_type = input("Enter commit type (e.g., feat, fix, chore): ")
         length = input("Message length (brief/detailed): ")
 
-        # Retrieve unstaged changes and generate multiple commit messages
-        changes = get_git_changes()
-        for change in changes:
-            diff_summary = analyze_diff(change["diff"])
-            initial_messages = [
-                generate_commit_message(commit_type, "", language, framework, diff_summary, length)
-                for _ in range(3)
-            ]  # Generate 3 variations
+        try:
+            changes = get_git_changes()
+            for change in changes:
+                context_summary = analyze_diff(change["diff"])
 
-            # Interactive review
-            selected_message = None
-            while selected_message is None:
-                selected_message = interactive_commit_review(initial_messages)
-            
-            print(f"\nFinalized Commit Message:\n{selected_message}")
+                # Check for a saved message
+                saved_message = get_similar_message(context_summary)
+                if saved_message:
+                    print(f"Suggested common commit message:\n{saved_message}")
+                    use_saved = input("Use this message? (y/n): ")
+                    if use_saved.lower() == 'y':
+                        selected_message = saved_message
+                    else:
+                        selected_message = generate_commit_message(
+                            commit_type, "", language, framework, context_summary, length
+                        )
+                        save_common_message(context_summary, selected_message)
+                else:
+                    selected_message = generate_commit_message(
+                        commit_type, "", language, framework, context_summary, length
+                    )
+                    save_common_message(context_summary, selected_message)
+
+                print(f"\nFinalized Commit Message:\n{selected_message}")
+
+        except Exception as e:
+            log_error(e)
+            print("An error occurred. Check commit_tool.log for details.")
 
 if __name__ == "__main__":
     main()
