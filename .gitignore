@@ -25,3 +25,6 @@ Thumbs.db
 # Git metadata
 .idea/
 .vscode/
+
+# .gitignore
+config.json
