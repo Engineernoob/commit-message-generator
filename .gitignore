@@ -5,7 +5,7 @@ dist/
 # Python cache files
 __pycache__/
 *.py[cod]
-venv/
+.venv/
 
 # Electron build files
 out/
