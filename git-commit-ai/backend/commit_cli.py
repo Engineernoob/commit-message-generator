@@ -2,7 +2,6 @@ import os
 import json
 import argparse
 
-from numpy import common_type
 from model import generate_commit_message, get_git_changes, analyze_diff  # Import functions from model.py
 from utils import save_common_message, get_similar_message, log_error
 
@@ -53,23 +52,36 @@ def interactive_commit_review(messages):
 
 def main():
     parser = argparse.ArgumentParser(description="Generate AI-based git commit messages.")
-    parser.add_argument("--generate", action="store_true", help="Generate a commit message based on changes")
-    parser.add_argument("--setup", action="store_true", help="Set up or reconfigure project settings")
-    parser.add_argument('--type', type=str, required=True, help="Commit type (feat, fix, chore, etc.)")
-    parser.add_argument('--message', type=str, required=False, help="Custom message")
+    group = parser.add_mutually_exclusive_group(required=True)
+    group.add_argument("--generate", action="store_true", help="Generate a commit message based on changes")
+    group.add_argument("--setup", action="store_true", help="Set up or reconfigure project settings")
+    
+    parser.add_argument('--type', type=str, help="Commit type (feat, fix, chore, etc.)")
+    parser.add_argument('--message', type=str, help="Custom message")
     args = parser.parse_args()
 
-    config = load_config() if not args.setup else setup_config()
+    # Handle configuration setup
+    if args.setup:
+        config = setup_config()
+        print("Configuration completed.")
+        return
+    
+    # Handle commit message generation
+    config = load_config()
     language = config.get("language", "Unknown")
     framework = config.get("framework", "Unknown")
 
     if args.generate:
-         # Generate the commit message using the provided arguments
+        # Ensure that --type is provided when --generate is used
+        if not args.type:
+            parser.error("--type is required when using --generate")
+
+        # Generate the commit message using the provided arguments
         commit_message = generate_commit_message(
             commit_type=args.type,
             custom_message=args.message if args.message else "",
-            language="Python",
-            framework="Flask",
+            language=language,
+            framework=framework,
             diff_summary="general updates",  # Adjust if needed
             length="brief"
         )
