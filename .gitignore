@@ -1,0 +1,27 @@
+# Node.js dependencies
+node_modules/
+dist/
+
+# Python cache files
+__pycache__/
+*.py[cod]
+venv/
+
+# Electron build files
+out/
+build/
+*.asar
+
+# OS-specific files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Environmental variables
+.env
+
+# Git metadata
+.idea/
+.vscode/
