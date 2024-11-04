@@ -37,9 +37,11 @@ def setup_config(project_dir):
     config["specialization"] = input("Enter your specialization (e.g., AI, Front-end, Backend): ")
 
     os.makedirs(project_dir, exist_ok=True)
+    
     config_path = os.path.join(project_dir, CONFIG_FILE)
     with open(config_path, 'w') as f:
-        json.dump(config, f)
+        json.dump(config, f, indent=4)
+        print(f"Configuration saved to {config_path}")
     return config
 
 def check_or_initialize_git_repo(project_dir):
