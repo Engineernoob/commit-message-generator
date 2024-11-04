@@ -4,7 +4,7 @@ import ErrorIcon from '@mui/icons-material/Error';
 import PersonIcon from '@mui/icons-material/Person';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 
-const BACKEND_URL = 'http://localhost:5000'; // Replace with your backend URL
+const BACKEND_URL = 'http://127.0.0.1:5000'; // Replace with your backend URL
 
 function App() {
   const [messages, setMessages] = useState([]);
