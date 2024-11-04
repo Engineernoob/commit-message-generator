@@ -4,7 +4,7 @@ import ErrorIcon from '@mui/icons-material/Error';
 import PersonIcon from '@mui/icons-material/Person';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 
-const BACKEND_URL = 'http://127.0.0.1:5000'; // Adjust this to match your backend URL
+const BACKEND_URL = 'http://localhost:5000';
 
 function App() {
   const [messages, setMessages] = useState([
@@ -36,15 +36,15 @@ function App() {
       let response = '';
 
       if (command === 'setup') {
-        // Start the setup process by calling the backend's /setup endpoint
         const res = await fetch(`${BACKEND_URL}/setup`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ createConfig: 'yes' }), // Assuming the user wants to create a config
         });
 
         if (res.ok) {
           const data = await res.json();
-          response = `Setup completed: ${data.message}`;
+          response = `Setup completed: ${data.message}\nConfiguration: ${JSON.stringify(data.config, null, 2)}`;
         } else {
           response = 'Error during setup.';
         }
@@ -52,22 +52,22 @@ function App() {
       } else if (command === 'generate') {
         const commitType = args[0] || 'feat';
         const customMessage = args.slice(1).join(' ') || '';
-
+        
         const res = await fetch(`${BACKEND_URL}/generateCommitMessage`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ commitType, customMessage }),
+          body: JSON.stringify({ commitType, customMessage, autoCommit: true }),
         });
 
         if (res.ok) {
           const data = await res.json();
-          response = `Generated Commit Message: ${data.commitMessage}\nYou gained ${data.experience} experience and slayed ${data.enemiesSlain} enemies.`;
+          response = `Generated Commit Message: ${data.commitMessage}\nYou gained ${data.experience} experience and slayed ${data.enemiesSlain} enemies.\n${data.autoCommitResponse}`;
         } else {
           response = 'Error generating commit message.';
         }
 
       } else if (command === 'help') {
-        response = "Commands: setup, generate [type] [message], clear, help";
+        response = "Commands:\n- setup: Start project setup\n- generate [type] [message]: Generate a commit message\n- clear: Clear messages\n- help: Show commands";
 
       } else {
         response = `Unknown command: ${command}`;
