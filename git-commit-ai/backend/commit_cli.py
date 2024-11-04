@@ -5,8 +5,8 @@ import json
 from git import InvalidGitRepositoryError, Repo
 from model import generate_commit_message, get_git_changes, analyze_diff  # Import functions from model.py
 
-# Configuration file name
-CONFIG_FILE = ""
+# Set the configuration file name
+CONFIG_FILE = "project_config.json"
 
 def load_config(project_dir):
     """Loads configuration for the specified project directory or sets it up if missing."""

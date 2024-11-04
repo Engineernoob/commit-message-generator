@@ -6,15 +6,15 @@ from commit_cli import (
     load_config,
     setup_config,
     check_or_initialize_git_repo,
-    generate_commit_message,
+    generate_commit_message_for_frontend,
     get_git_changes,
-    analyze_diff,
+    analyze_diff
 )
 
 app = Flask(__name__)
 CORS(app)  # Enable CORS for frontend requests
 
-# Create a temporary directory if the project directory is not specified
+# Create a temporary project directory if none is provided
 def get_temp_project_dir():
     temp_dir = tempfile.mkdtemp(prefix="CommitMessageProject_")
     print(f"Temporary project directory created at: {temp_dir}")
@@ -75,13 +75,10 @@ def generate_commit():
     diff_summary = changes[0]["diff"] if changes else "general updates"
 
     # Generate the commit message
-    commit_message = generate_commit_message(
+    commit_message = generate_commit_message_for_frontend(
         commit_type=commit_type,
         custom_message=custom_message,
-        language=language,
-        framework=framework,
-        diff_summary=diff_summary,
-        length="brief"
+        project_dir=project_dir
     )
 
     # Auto-commit if requested
@@ -114,4 +111,3 @@ def generate_commit():
 
 if __name__ == '__main__':
     app.run(port=5000)
-
