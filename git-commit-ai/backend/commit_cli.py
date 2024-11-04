@@ -56,7 +56,7 @@ def check_or_initialize_git_repo(project_dir):
             raise InvalidGitRepositoryError
         return repo
     except InvalidGitRepositoryError:
-        initialize = input("No Git repository found. Would you like to initialize one here? (yes/no): ").strip().lower()
+        initialize = input("No Git repository found in the project directory. Would you like to initialize one? (yes/no): ").strip().lower()
         if initialize == 'yes':
             repo = Repo.init(project_dir)
             print("Initialized a new Git repository.")
