@@ -14,32 +14,30 @@ from commit_cli import (
 app = Flask(__name__)
 CORS(app)  # Enable CORS for frontend requests
 
-# Create a temporary project directory if none is provided
-def get_temp_project_dir():
-    temp_dir = tempfile.mkdtemp(prefix="CommitMessageProject_")
-    print(f"Temporary project directory created at: {temp_dir}")
+# Define a fixed directory for storing the configuration file in the system's temp folder
+def get_persistent_temp_dir():
+    temp_dir = os.path.join(tempfile.gettempdir(), "CommitMessageProject")
+    if not os.path.exists(temp_dir):
+        os.makedirs(temp_dir)
+        print(f"Temporary project directory created at: {temp_dir}")
+    else:
+        print(f"Using existing project directory at: {temp_dir}")
     return temp_dir
 
 @app.route('/setup', methods=['POST'])
 def setup_project():
-    # Retrieve project directory or create a temporary one if not provided
+    # Use the persistent temporary directory for configuration
     data = request.json
-    project_dir = data.get('projectDir') or get_temp_project_dir()
+    project_dir = data.get('projectDir') or get_persistent_temp_dir()
 
-    if not os.path.exists(project_dir):
-        try:
-            os.makedirs(project_dir)
-        except OSError as e:
-            return jsonify({"error": f"Failed to create directory '{project_dir}': {str(e)}"}), 500
-
-    # Use setup_config to create and save configuration
+    # Ensure configuration setup
     config = setup_config(project_dir)
     return jsonify({"message": "Configuration setup completed.", "config": config, "projectDir": project_dir})
 
 @app.route('/generateCommitMessage', methods=['POST'])
 def generate_commit():
     data = request.json
-    project_dir = data.get('projectDir') or get_temp_project_dir()
+    project_dir = data.get('projectDir') or get_persistent_temp_dir()
     commit_type = data.get('commitType', 'feat')
     custom_message = data.get('customMessage', '')
     auto_commit = data.get('autoCommit', False)  # New parameter to auto-commit
@@ -47,7 +45,7 @@ def generate_commit():
     if not os.path.isdir(project_dir):
         return jsonify({"error": "Invalid project directory specified."}), 400
 
-    # Load configuration or prompt to create a new one if none is found
+    # Load configuration, and prompt to create a new one if none is found
     config = load_config(project_dir)
     if not config:
         return jsonify({"error": "No configuration file found and creation declined."}), 400
@@ -100,4 +98,3 @@ def generate_commit():
 
 if __name__ == '__main__':
     app.run(port=5000)
-
