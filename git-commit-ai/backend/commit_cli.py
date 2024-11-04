@@ -4,7 +4,7 @@ import json
 import tempfile
 
 from git import InvalidGitRepositoryError, Repo
-from model import generate_commit_message, get_git_changes, analyze_diff  # Import functions from model.py
+from model import generate_commit_message, get_git_changes, analyze_diff
 
 # Set the configuration file name
 CONFIG_FILE = "project_config.json"
@@ -65,19 +65,36 @@ def check_or_initialize_git_repo(project_dir):
             print("Git repository is required to generate commit messages.")
             return None
 
-def reconfigure(project_dir):
-    """Removes the configuration file to reconfigure the project."""
-    config_path = os.path.join(project_dir, CONFIG_FILE)
-    if os.path.exists(config_path):
-        os.remove(config_path)
-    print("Reconfiguring...")
-    return setup_config(project_dir)
+def calculate_specialization_boost(language, specialization, commit_type):
+    """Calculate additional experience points based on the language and specialization."""
+    boost = 0
+    if language.lower() == "python" and specialization.lower() == "machine learning":
+        if commit_type == "feat":  # Magician class
+            boost = 20  # Extra experience for ML/AI feats
+            print("Your AI spells are more powerful as a Magician!")
+    elif language.lower() == "javascript" and specialization.lower() == "front-end":
+        if commit_type == "chore":  # Archer class
+            boost = 15  # Extra experience for front-end maintenance
+            print("Your front-end Archer skills give extra precision!")
+    elif language.lower() in ["go", "rust"] and specialization.lower() == "backend":
+        if commit_type == "fix":  # Warrior class
+            boost = 25  # Extra experience for backend fixes
+            print("Your backend Warrior skills provide extra resilience!")
+    elif specialization.lower() == "full-stack":
+        # Full-stack specialization gets a balanced boost for all commit types
+        if commit_type == "feat":
+            boost = 10  # Smaller boost for new features
+            print("Your Full-stack skills shine as you craft a new feature!")
+        elif commit_type == "fix":
+            boost = 10  # Smaller boost for bug fixes
+            print("Your Full-stack prowess helps squash a bug!")
+        elif commit_type == "chore":
+            boost = 10  # Smaller boost for maintenance
+            print("Your Full-stack versatility enhances the codebase!")
+    return boost
 
 def interactive_commit_review(messages):
-    """
-    Displays multiple commit message suggestions and allows the user to choose, modify, or regenerate messages.
-    Returns the user's selected or modified message.
-    """
+    """Displays multiple commit message suggestions and allows the user to choose, modify, or regenerate messages."""
     for idx, message in enumerate(messages, start=1):
         print(f"\nSuggested Commit Message {idx}:\n{message}")
 
@@ -92,25 +109,18 @@ def interactive_commit_review(messages):
         return messages[0]
 
 def generate_commit_message_for_frontend(commit_type, custom_message, project_dir):
-    """
-    Generates a commit message for use in the Flask app, using the specified project directory.
-
-    Parameters:
-    - commit_type: The type of the commit (e.g., feat, fix, chore).
-    - custom_message: A custom message provided by the user.
-    - project_dir: The directory of the project.
-
-    Returns:
-    A generated commit message string.
-    """
-    # Use default commit type if not provided
-    commit_type = commit_type or 'chore'
-    custom_message = custom_message or ''  # Allow the model to generate a message without a custom message
+    """Generates a commit message for use in the Flask app, using the specified project directory."""
+    commit_type = commit_type or 'chore'  # Default to 'chore' if no type is provided
+    custom_message = custom_message or ''  # Allow generation without a custom message
 
     # Load the configuration for the project
     config = load_config(project_dir)
     language = config.get("language", "Unknown")
     framework = config.get("framework", "Unknown")
+    specialization = config.get("specialization", "Generalist")
+
+    # Example usage of specialization (if applicable)
+    print(f"Specialization: {specialization}")
 
     # Retrieve Git changes if required
     repo = check_or_initialize_git_repo(project_dir)
@@ -129,68 +139,86 @@ def generate_commit_message_for_frontend(commit_type, custom_message, project_di
         diff_summary=diff_summary,
         length="brief"
     )
+    
+    # Calculate experience points
+    insertions, deletions = 0, 0
+    for change in changes:
+        ins, dels = analyze_diff(change["diff"])
+        insertions += ins
+        deletions += dels
+    experience = insertions + deletions
+    enemies_slain = len(changes)
 
-    return commit_message
+    # Apply specialization boost
+    boost = calculate_specialization_boost(language, specialization, commit_type)
+    experience += boost
 
+    return commit_message, experience, enemies_slain, boost
 
 def main():
-    parser = argparse.ArgumentParser(description="Generate AI-based git commit messages.")
-    parser.add_argument("project_dir", type=str, nargs='?', default=get_persistent_temp_project_dir(),
-                        help="Path to the project directory. Creates a temporary directory if not provided.")
-    group = parser.add_mutually_exclusive_group(required=True)
-    group.add_argument("--generate", action="store_true", help="Generate a commit message based on changes")
-    group.add_argument("--setup", action="store_true", help="Set up or reconfigure project settings")
-    
-    parser.add_argument('--type', type=str, help="Commit type (feat, fix, chore, etc.)")
-    parser.add_argument('--message', type=str, help="Custom message")
-    args = parser.parse_args()
+    print("Welcome to Commit Message Quest!")
+    print("Type 'generate' to start your quest.\n")
 
-    project_dir = args.project_dir
-
-    # Handle configuration setup
-    if args.setup:
-        config = setup_config(project_dir)
-        print("Configuration completed.")
-        return
-    
-    # Handle commit message generation
+    project_dir = get_persistent_temp_project_dir()
     config = load_config(project_dir)
-    language = config.get("language", "Unknown")
-    framework = config.get("framework", "Unknown")
 
-    if args.generate:
-        # Ensure that --type is provided when --generate is used
-        if not args.type:
-            parser.error("--type is required when using --generate")
+    while True:
+        user_input = input("> ").strip().lower()
 
-        # Check or initialize Git repository
-        repo = check_or_initialize_git_repo(project_dir)
-        if not repo:
-            print("Git repository is required to generate commit messages.")
-            return
+        if user_input == "generate":
+            print("\nChoose your class:")
+            print("[feat] Magician - Adds new features")
+            print("[fix] Warrior - Fixes bugs")
+            print("[chore] Archer - General maintenance\n")
+            commit_type = input("Enter your class: ").strip().lower()
 
-        # Generate the commit message using the provided arguments
-        commit_message = generate_commit_message(
-            commit_type=args.type,
-            custom_message=args.message if args.message else "",
-            language=language,
-            framework=framework,
-            diff_summary="general updates",  # Adjust if needed
-            length="brief"
-        )
-        print(commit_message)  # Print to stdout for capture
+            if commit_type not in ["feat", "fix", "chore"]:
+                print("Invalid class! Please choose feat, fix, or chore.")
+                continue
 
-        try:
-            changes = get_git_changes(repo)
-            for change in changes:
-                context_summary = analyze_diff(change["diff"])
+            custom_message = input("\nEnter your commit message (or leave blank to auto-generate): ").strip()
 
-                # Interactive commit review
-                selected_message = interactive_commit_review([commit_message])
-                print(f"\nFinalized Commit Message:\n{selected_message}")
+            changes = get_git_changes(Repo(project_dir))
+            diff_summary = changes[0]["diff"] if changes else "general updates"
 
-        except Exception as e:
-            print(f"An error occurred: {e}")
+            # Generate commit message
+            commit_message = generate_commit_message(
+                commit_type=commit_type,
+                custom_message=custom_message,
+                language=config.get("language", "Unknown"),
+                framework=config.get("framework", "Unknown"),
+                diff_summary=diff_summary,
+                length="brief"
+            )
+
+            # Apply specialization boost
+            boost = calculate_specialization_boost(
+                config.get("language", "Unknown"),
+                config.get("specialization", "Generalist"),
+                commit_type
+            )
+            experience = sum(len(change['diff']) for change in changes) + boost
+
+            # Display results
+            print("\n--- Quest Result ---")
+            print(f"Commit Message: {commit_message}")
+            print(f"You gained {experience} experience points and received a boost of {boost}.")
+            print("--------------------\n")
+
+        elif user_input == "setup":
+            setup_config(project_dir)
+            print("Configuration completed.\n")
+        elif user_input == "help":
+            print("Commands:")
+            print("- generate: Begin your quest to generate a commit message.")
+            print("- setup: Configure project settings.")
+            print("- help: Show available commands.")
+            print("- exit: Exit the quest.")
+        elif user_input == "exit":
+            print("Farewell, brave coder! Until next time.")
+            break
+        else:
+            print("Unknown command. Type 'help' to see available commands.")
 
 if __name__ == "__main__":
     main()
