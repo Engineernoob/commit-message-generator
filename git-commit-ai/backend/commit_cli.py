@@ -6,7 +6,7 @@ from git import InvalidGitRepositoryError, Repo
 from model import generate_commit_message, get_git_changes, analyze_diff  # Import functions from model.py
 
 # Configuration file name
-CONFIG_FILE = "config.json"
+CONFIG_FILE = ""
 
 def load_config(project_dir):
     """Loads configuration for the specified project directory or sets it up if missing."""
@@ -15,7 +15,12 @@ def load_config(project_dir):
         with open(config_path, 'r') as f:
             return json.load(f)
     else:
-        return setup_config(project_dir)
+        create_config = input("No configuration file found. Do you want to create a new one? (yes/no): ").strip().lower()
+        if create_config == 'yes':
+            return setup_config(project_dir)
+        else:
+            print("No configuration file created. Please run setup to configure your project.")
+            return {}
 
 def setup_config(project_dir):
     """Prompts the user to set up configuration for a specified project directory and saves it."""
