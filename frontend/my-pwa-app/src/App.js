@@ -8,7 +8,10 @@ const BACKEND_URL = 'http://127.0.0.1:5000'; // Adjust this to match your backen
 
 function App() {
   const [messages, setMessages] = useState([
-    { type: 'system', text: 'Welcome to Commit Message Quest! 🚀\n\nAvailable commands:\n- setup [directory]: Set up a project\n- generate [type] [message]: Generate a commit message\n- clear: Clear the messages\n- help: Show available commands\n\nChoose your path and embark on your coding adventure!' }
+    {
+      type: 'system',
+      text: "Welcome to Commit Message Quest! 🚀\n\nAvailable commands:\n- setup: Start the project setup process\n- generate [type] [message]: Generate a commit message\n- clear: Clear the messages\n- help: Show available commands\n\nChoose your path and embark on your coding adventure!"
+    }
   ]);
   const [input, setInput] = useState('');
 
@@ -16,9 +19,13 @@ function App() {
     if (!input.trim()) return;
 
     if (input.trim().toLowerCase() === 'clear') {
-      // Clear command: reset messages to an empty array
-      setMessages([]);
-      setInput(''); // Clear the input field
+      setMessages([
+        {
+          type: 'system',
+          text: "Welcome to Commit Message Quest! 🚀\n\nAvailable commands:\n- setup: Start the project setup process\n- generate [type] [message]: Generate a commit message\n- clear: Clear the messages\n- help: Show available commands\n\nChoose your path and embark on your coding adventure!"
+        }
+      ]);
+      setInput('');
       return;
     }
 
@@ -29,12 +36,10 @@ function App() {
       let response = '';
 
       if (command === 'setup') {
-        const projectDir = args[0] || `${BACKEND_URL}/default-project`;
-        // Setup project request
+        // Start the setup process by calling the backend's /setup endpoint
         const res = await fetch(`${BACKEND_URL}/setup`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ projectDir, createConfig: "yes" }),
         });
 
         if (res.ok) {
@@ -48,7 +53,6 @@ function App() {
         const commitType = args[0] || 'feat';
         const customMessage = args.slice(1).join(' ') || '';
 
-        // Send a POST request to the Flask backend to generate a commit message
         const res = await fetch(`${BACKEND_URL}/generateCommitMessage`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -63,7 +67,7 @@ function App() {
         }
 
       } else if (command === 'help') {
-        response = "Commands: setup [directory], generate [type] [message], clear, help";
+        response = "Commands: setup, generate [type] [message], clear, help";
 
       } else {
         response = `Unknown command: ${command}`;
@@ -140,7 +144,7 @@ function App() {
 
       <TextField
         label="Type a command"
-        placeholder="e.g., setup /path/to/project, generate feat Add feature, clear"
+        placeholder="e.g., setup, generate feat Add feature, clear"
         variant="outlined"
         fullWidth
         value={input}
