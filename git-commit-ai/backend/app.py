@@ -10,12 +10,15 @@ CORS(app)  # Enable CORS for frontend requests
 def setup_project():
     try:
         data = request.json
-        # Default to a directory in the home directory if projectDir is not provided
+        # Default to a writable directory in the home directory if projectDir not provided
         project_dir = data.get('projectDir') or os.path.expanduser("~/Commit-Message/default-project")
 
         # Attempt to create the directory if it doesn’t exist
         if not os.path.exists(project_dir):
-            os.makedirs(project_dir, exist_ok=True)
+            try:
+                os.makedirs(project_dir, exist_ok=True)
+            except OSError as e:
+                return jsonify({"error": f"Failed to create directory '{project_dir}': {str(e)}"}), 500
 
         # Load configuration or prompt to create a new one if none is found
         config = load_config(project_dir)
