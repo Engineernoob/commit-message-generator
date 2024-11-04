@@ -2,77 +2,96 @@ from flask import Flask, request, jsonify
 from flask_cors import CORS
 import os
 import tempfile
-from commit_cli import load_config, setup_config, check_or_initialize_git_repo, generate_commit_message, get_git_changes, analyze_diff
+from commit_cli import (
+    load_config,
+    setup_config,
+    check_or_initialize_git_repo,
+    generate_commit_message,
+    get_git_changes,
+    analyze_diff
+)
+from git import Repo
 
 app = Flask(__name__)
 CORS(app)  # Enable CORS for frontend requests
 
+# Root directory for all project directories
+ROOT_DIR = os.path.expanduser("~/Commit-Message")
+
+# Ensure ROOT_DIR exists
+os.makedirs(ROOT_DIR, exist_ok=True)
+
+# Function to load configuration for a project
+def load_or_create_config(project_dir):
+    config = load_config(project_dir)
+    if not config:
+        # Ask the user (or system) if a new config should be created
+        config = setup_config(project_dir)
+    return config
+
+# Endpoint to set up the project directory and configuration
 @app.route('/setup', methods=['POST'])
 def setup_project():
     try:
         data = request.json
-        # Create a temporary directory if no projectDir is provided
-        if 'projectDir' not in data or not data['projectDir']:
-            temp_dir = tempfile.TemporaryDirectory()  # Creates a temp dir for testing
-            project_dir = temp_dir.name
-            print(f"Using temporary project directory for testing: {project_dir}")
-        else:
-            project_dir = data['projectDir']
-            if not os.path.exists(project_dir):
-                os.makedirs(project_dir, exist_ok=True)
-        
-        # Load configuration or prompt to create a new one if none is found
-        config = load_config(project_dir)
-        if not config:
-            create_config = data.get('createConfig', 'no')
-            if create_config.lower() == 'yes':
-                config = setup_config(project_dir)
-            else:
-                return jsonify({"error": "No configuration file found and creation declined."}), 400
+        project_dir = data.get('projectDir') or os.path.join(ROOT_DIR, "default-project")  # Default path under ROOT_DIR
 
-        # Respond with project information
+        # Create project directory if it doesn't exist
+        if not os.path.exists(project_dir):
+            os.makedirs(project_dir, exist_ok=True)
+
+        # Load or create configuration
+        config = load_or_create_config(project_dir)
         return jsonify({"message": "Configuration setup completed.", "config": config, "projectDir": project_dir})
     
     except Exception as e:
-        print(f"Error in /setup: {e}")  # Log the error for debugging
+        print(f"Error in /setup: {e}")
         return jsonify({"error": f"Internal Server Error: {str(e)}"}), 500
 
-@app.route('/generateCommitMessage', methods=['POST'])
-def generate_commit():
+# Endpoint to create a temporary project directory under ROOT_DIR
+@app.route('/createTempProjectDir', methods=['GET'])
+def create_temp_project_dir():
+    try:
+        # Create a temporary directory under ROOT_DIR
+        temp_dir = tempfile.mkdtemp(dir=ROOT_DIR)
+        print(f"Temporary project directory created at: {temp_dir}")
+        
+        # Return the temporary directory path so the frontend can use it
+        return jsonify({"projectDir": temp_dir, "message": "Temporary project directory created for testing."})
+    
+    except Exception as e:
+        print(f"Error in /createTempProjectDir: {e}")
+        return jsonify({"error": f"Internal Server Error: {str(e)}"}), 500
+
+# Endpoint to generate and commit a message automatically
+@app.route('/autoCommit', methods=['POST'])
+def auto_commit():
     try:
         data = request.json
-        project_dir = data.get('projectDir')
+        project_dir = data.get('projectDir') or os.path.join(ROOT_DIR, "default-project")
         commit_type = data.get('commitType', 'feat')
         custom_message = data.get('customMessage', '')
 
-        print(f"Generate commit called with projectDir: {project_dir}, commitType: {commit_type}, customMessage: {custom_message}")
+        # Create project directory if it doesn’t exist
+        if not os.path.exists(project_dir):
+            os.makedirs(project_dir, exist_ok=True)
 
-        # Check if project directory is valid
-        if not project_dir or not os.path.isdir(project_dir):
-            print("Invalid project directory specified.")
-            return jsonify({"error": "Invalid project directory specified."}), 400
-
-        # Load configuration or prompt to create a new one if none is found
-        config = load_config(project_dir)
-        if not config:
-            create_config = data.get('createConfig', 'no')
-            if create_config.lower() == 'yes':
-                config = setup_config(project_dir)
-            else:
-                return jsonify({"error": "No configuration file found and creation declined."}), 400
+        # Load or create configuration
+        config = load_or_create_config(project_dir)
         language = config.get("language", "Unknown")
         framework = config.get("framework", "Unknown")
 
-        # Check for Git repository
+        # Check or initialize Git repository
         repo = check_or_initialize_git_repo(project_dir)
         if not repo:
             return jsonify({"error": "No Git repository found and initialization declined."}), 400
 
-        # Get git changes
+        # Retrieve Git changes and generate commit message
         changes = get_git_changes(repo)
+        if not changes:
+            return jsonify({"error": "No changes to commit."}), 400
+        
         diff_summary = changes[0]["diff"] if changes else "general updates"
-
-        # Generate the commit message
         commit_message = generate_commit_message(
             commit_type=commit_type,
             custom_message=custom_message,
@@ -81,6 +100,10 @@ def generate_commit():
             diff_summary=diff_summary,
             length="brief"
         )
+
+        # Perform the commit
+        repo.git.add(A=True)  # Stage all changes
+        repo.index.commit(commit_message)  # Commit with the generated message
 
         # Calculate experience and enemies slain
         insertions, deletions = 0, 0
@@ -95,11 +118,12 @@ def generate_commit():
         return jsonify({
             "commitMessage": commit_message,
             "experience": experience,
-            "enemiesSlain": enemies_slain
+            "enemiesSlain": enemies_slain,
+            "message": "Changes committed successfully!"
         })
 
     except Exception as e:
-        print(f"Error in /generateCommitMessage: {e}")
+        print(f"Error in /autoCommit: {e}")
         return jsonify({"error": f"Internal Server Error: {str(e)}"}), 500
 
 if __name__ == '__main__':
