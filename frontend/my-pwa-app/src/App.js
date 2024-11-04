@@ -67,7 +67,10 @@ function App() {
         const customMessage = args.slice(1).join(" ") || "";
         const projectDir = ""; // Specify a default project directory or get it dynamically if needed
         const autoCommit = false; // Set to true if auto-commit is desired by default
-    
+
+        // Log the payload to the console for debugging
+        console.log("Payload sent to backend:", { projectDir, commitType, customMessage, autoCommit });
+
         const res = await fetch(`${BACKEND_URL}/generateCommitMessage`, {
             method: "POST",
             headers: { "Content-Type": "application/json" },
