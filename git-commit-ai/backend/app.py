@@ -12,7 +12,7 @@ from commit_cli import (
 )
 
 app = Flask(__name__)
-CORS(app,resources={r"/*": {"origins": "*"}})  # Enable CORS for frontend requests
+CORS(app)  # Enable CORS for frontend requests
 
 # Create a temporary project directory if none is provided
 def get_temp_project_dir():
@@ -32,21 +32,13 @@ def setup_project():
         except OSError as e:
             return jsonify({"error": f"Failed to create directory '{project_dir}': {str(e)}"}), 500
 
-    # Load configuration or initiate setup if no config is found
-    config = load_config(project_dir)
-    if not config:
-        create_config = data.get('createConfig', 'no')
-        if create_config.lower() == 'yes':
-            config = setup_config(project_dir)
-        else:
-            return jsonify({"error": "No configuration file found and creation declined."}), 400
-    
+    # Use setup_config to create and save configuration
+    config = setup_config(project_dir)
     return jsonify({"message": "Configuration setup completed.", "config": config, "projectDir": project_dir})
 
 @app.route('/generateCommitMessage', methods=['POST'])
 def generate_commit():
     data = request.json
-    print("Received data:", data)  # Log incoming data
     project_dir = data.get('projectDir') or get_temp_project_dir()
     commit_type = data.get('commitType', 'feat')
     custom_message = data.get('customMessage', '')
@@ -58,11 +50,7 @@ def generate_commit():
     # Load configuration or prompt to create a new one if none is found
     config = load_config(project_dir)
     if not config:
-        create_config = data.get('createConfig', 'no')
-        if create_config.lower() == 'yes':
-            config = setup_config(project_dir)
-        else:
-            return jsonify({"error": "No configuration file found and creation declined."}), 400
+        return jsonify({"error": "No configuration file found and creation declined."}), 400
     language = config.get("language", "Unknown")
     framework = config.get("framework", "Unknown")
 
@@ -112,3 +100,4 @@ def generate_commit():
 
 if __name__ == '__main__':
     app.run(port=5000)
+
