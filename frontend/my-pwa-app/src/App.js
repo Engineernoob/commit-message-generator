@@ -7,7 +7,9 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 const BACKEND_URL = 'http://127.0.0.1:5000'; // Adjust this to match your backend URL
 
 function App() {
-  const [messages, setMessages] = useState([]);
+  const [messages, setMessages] = useState([
+    { type: 'system', text: 'Welcome to Commit Message Quest! 🚀\n\nAvailable commands:\n- setup [directory]: Set up a project\n- generate [type] [message]: Generate a commit message\n- clear: Clear the messages\n- help: Show available commands\n\nChoose your path and embark on your coding adventure!' }
+  ]);
   const [input, setInput] = useState('');
 
   const handleCommand = async () => {
