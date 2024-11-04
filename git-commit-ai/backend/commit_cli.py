@@ -1,7 +1,7 @@
 import os
 import json
 from model import generate_commit_message, get_git_changes, analyze_diff
-from utils import save_common_message, get_similar_message, log_error
+
 
 # Configuration file path
 CONFIG_FILE = "config.json"
