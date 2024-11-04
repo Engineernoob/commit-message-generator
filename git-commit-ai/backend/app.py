@@ -12,7 +12,7 @@ from commit_cli import (
 )
 
 app = Flask(__name__)
-CORS(app)  # Enable CORS for frontend requests
+CORS(app,resources={r"/*": {"origins": "*"}})  # Enable CORS for frontend requests
 
 # Create a temporary project directory if none is provided
 def get_temp_project_dir():
@@ -46,6 +46,7 @@ def setup_project():
 @app.route('/generateCommitMessage', methods=['POST'])
 def generate_commit():
     data = request.json
+    print("Received data:", data)  # Log incoming data
     project_dir = data.get('projectDir') or get_temp_project_dir()
     commit_type = data.get('commitType', 'feat')
     custom_message = data.get('customMessage', '')
