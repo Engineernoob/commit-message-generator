@@ -9,16 +9,24 @@ CORS(app)  # Enable CORS for frontend requests
 @app.route('/setup', methods=['POST'])
 def setup_project():
     data = request.json
-    project_dir = data.get('projectDir')
+    project_dir = data.get('projectDir') or os.path.expanduser("~/Commit-Message/default-project")  # Default path if not provided
 
-    if not project_dir:
-        return jsonify({"error": "No project directory specified."}), 400
+    if not os.path.exists(project_dir):
+        try:
+            os.makedirs(project_dir)
+        except OSError as e:
+            return jsonify({"error": f"Failed to create directory '{project_dir}': {str(e)}"}), 500
 
-    if not os.path.isdir(project_dir):
-        os.makedirs(project_dir)
-
-    config = setup_config(project_dir)
-    return jsonify({"message": "Configuration setup completed.", "config": config})
+    # Load configuration or prompt to create a new one if none is found
+    config = load_config(project_dir)
+    if not config:
+        create_config = data.get('createConfig', 'no')
+        if create_config.lower() == 'yes':
+            config = setup_config(project_dir)
+        else:
+            return jsonify({"error": "No configuration file found and creation declined."}), 400
+    
+    return jsonify({"message": "Configuration setup completed.", "config": config, "projectDir": project_dir})
 
 @app.route('/generateCommitMessage', methods=['POST'])
 def generate_commit():
@@ -33,7 +41,7 @@ def generate_commit():
     # Load configuration or prompt to create a new one if none is found
     config = load_config(project_dir)
     if not config:
-        create_config = request.json.get('createConfig', 'no')
+        create_config = data.get('createConfig', 'no')
         if create_config.lower() == 'yes':
             config = setup_config(project_dir)
         else:
@@ -78,4 +86,3 @@ def generate_commit():
 
 if __name__ == '__main__':
     app.run(port=5000)
-
