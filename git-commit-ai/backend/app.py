@@ -30,8 +30,14 @@ def generate_commit():
     if not project_dir or not os.path.isdir(project_dir):
         return jsonify({"error": "Invalid project directory specified."}), 400
 
-    # Load configuration
+    # Load configuration or prompt to create a new one if none is found
     config = load_config(project_dir)
+    if not config:
+        create_config = request.json.get('createConfig', 'no')
+        if create_config.lower() == 'yes':
+            config = setup_config(project_dir)
+        else:
+            return jsonify({"error": "No configuration file found and creation declined."}), 400
     language = config.get("language", "Unknown")
     framework = config.get("framework", "Unknown")
 
