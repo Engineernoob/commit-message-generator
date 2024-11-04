@@ -1,12 +1,19 @@
 import argparse
 import os
 import json
+import tempfile
 
 from git import InvalidGitRepositoryError, Repo
 from model import generate_commit_message, get_git_changes, analyze_diff  # Import functions from model.py
 
 # Set the configuration file name
 CONFIG_FILE = "project_config.json"
+
+def get_temp_project_dir():
+    """Creates and returns a temporary project directory for testing or if none is specified."""
+    temp_dir = tempfile.mkdtemp(prefix="CommitMessageProject_")
+    print(f"Temporary project directory created at: {temp_dir}")
+    return temp_dir
 
 def load_config(project_dir):
     """Loads configuration for the specified project directory or sets it up if missing."""
@@ -117,7 +124,8 @@ def generate_commit_message_for_frontend(commit_type, custom_message, project_di
 
 def main():
     parser = argparse.ArgumentParser(description="Generate AI-based git commit messages.")
-    parser.add_argument("project_dir", type=str, help="Path to the project directory.")
+    parser.add_argument("project_dir", type=str, nargs='?', default=get_temp_project_dir(),
+                        help="Path to the project directory. Creates a temporary directory if not provided.")
     group = parser.add_mutually_exclusive_group(required=True)
     group.add_argument("--generate", action="store_true", help="Generate a commit message based on changes")
     group.add_argument("--setup", action="store_true", help="Set up or reconfigure project settings")
