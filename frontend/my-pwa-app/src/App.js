@@ -1,8 +1,5 @@
 import React, { useState } from 'react';
 import { TextField, Button, Typography, Paper, Box, Stack, Card, CardContent } from '@mui/material';
-import ErrorIcon from '@mui/icons-material/Error';
-import PersonIcon from '@mui/icons-material/Person';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 
 const BACKEND_URL = 'http://127.0.0.1:5000'; // Replace with your backend URL
 
@@ -10,8 +7,7 @@ function App() {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [step, setStep] = useState(0);  // To track the user’s step in the process
-  const [commitType, setCommitType] = useState('');
-  const [customMessage, setCustomMessage] = useState('');
+  const [commitType, setCommitType] = useState(''); // Track commit type
 
   const handleCommand = async () => {
     if (!input.trim()) return;
@@ -31,9 +27,6 @@ function App() {
         setMessages((prevMessages) => [...prevMessages, { type: 'error', text: "Invalid class! Choose from [feat, fix, chore]" }]);
       }
     } else if (step === 2) {
-      setCustomMessage(input);
-      setMessages((prevMessages) => [...prevMessages, { type: 'user', text: input }]);
-
       // Send request to Flask backend
       try {
         const res = await fetch(`${BACKEND_URL}/generateCommitMessage`, {
@@ -58,16 +51,9 @@ function App() {
       
       setStep(0);  // Reset the steps for the next command
       setCommitType('');
-      setCustomMessage('');
     }
 
     setInput('');
-  };
-
-  const getMessageIcon = (type) => {
-    if (type === 'error') return <ErrorIcon color="error" />;
-    if (type === 'system') return <CheckCircleIcon color="success" />;
-    return <PersonIcon color="primary" />;
   };
 
   const getMessageColor = (type) => {
