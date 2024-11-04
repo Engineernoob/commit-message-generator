@@ -34,7 +34,8 @@ def load_or_create_config(project_dir):
 def setup_project():
     try:
         data = request.json
-        project_dir = data.get('projectDir') or os.path.join(ROOT_DIR, "default-project")  # Default path under ROOT_DIR
+        # Use ROOT_DIR as base if projectDir is not provided, or create a temporary directory for testing
+        project_dir = data.get('projectDir') or tempfile.mkdtemp(dir=ROOT_DIR)
 
         # Create project directory if it doesn't exist
         if not os.path.exists(project_dir):
@@ -46,21 +47,6 @@ def setup_project():
     
     except Exception as e:
         print(f"Error in /setup: {e}")
-        return jsonify({"error": f"Internal Server Error: {str(e)}"}), 500
-
-# Endpoint to create a temporary project directory under ROOT_DIR
-@app.route('/createTempProjectDir', methods=['GET'])
-def create_temp_project_dir():
-    try:
-        # Create a temporary directory under ROOT_DIR
-        temp_dir = tempfile.mkdtemp(dir=ROOT_DIR)
-        print(f"Temporary project directory created at: {temp_dir}")
-        
-        # Return the temporary directory path so the frontend can use it
-        return jsonify({"projectDir": temp_dir, "message": "Temporary project directory created for testing."})
-    
-    except Exception as e:
-        print(f"Error in /createTempProjectDir: {e}")
         return jsonify({"error": f"Internal Server Error: {str(e)}"}), 500
 
 # Endpoint to generate and commit a message automatically
