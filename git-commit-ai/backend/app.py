@@ -1,6 +1,7 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 import os
+import tempfile
 from commit_cli import load_config, setup_config, check_or_initialize_git_repo, generate_commit_message, get_git_changes, analyze_diff
 
 app = Flask(__name__)
@@ -10,16 +11,16 @@ CORS(app)  # Enable CORS for frontend requests
 def setup_project():
     try:
         data = request.json
-        # Default to a writable directory in the home directory if projectDir not provided
-        project_dir = data.get('projectDir') or os.path.expanduser("~/Commit-Message/default-project")
-
-        # Attempt to create the directory if it doesn’t exist
-        if not os.path.exists(project_dir):
-            try:
+        # Create a temporary directory if no projectDir is provided
+        if 'projectDir' not in data or not data['projectDir']:
+            temp_dir = tempfile.TemporaryDirectory()  # Creates a temp dir for testing
+            project_dir = temp_dir.name
+            print(f"Using temporary project directory for testing: {project_dir}")
+        else:
+            project_dir = data['projectDir']
+            if not os.path.exists(project_dir):
                 os.makedirs(project_dir, exist_ok=True)
-            except OSError as e:
-                return jsonify({"error": f"Failed to create directory '{project_dir}': {str(e)}"}), 500
-
+        
         # Load configuration or prompt to create a new one if none is found
         config = load_config(project_dir)
         if not config:
@@ -28,11 +29,12 @@ def setup_project():
                 config = setup_config(project_dir)
             else:
                 return jsonify({"error": "No configuration file found and creation declined."}), 400
-        
+
+        # Respond with project information
         return jsonify({"message": "Configuration setup completed.", "config": config, "projectDir": project_dir})
     
     except Exception as e:
-        print(f"Error in /setup: {e}")  # Log the error to the console
+        print(f"Error in /setup: {e}")  # Log the error for debugging
         return jsonify({"error": f"Internal Server Error: {str(e)}"}), 500
 
 @app.route('/generateCommitMessage', methods=['POST'])
@@ -43,8 +45,11 @@ def generate_commit():
         commit_type = data.get('commitType', 'feat')
         custom_message = data.get('customMessage', '')
 
+        print(f"Generate commit called with projectDir: {project_dir}, commitType: {commit_type}, customMessage: {custom_message}")
+
         # Check if project directory is valid
         if not project_dir or not os.path.isdir(project_dir):
+            print("Invalid project directory specified.")
             return jsonify({"error": "Invalid project directory specified."}), 400
 
         # Load configuration or prompt to create a new one if none is found
@@ -94,8 +99,9 @@ def generate_commit():
         })
 
     except Exception as e:
-        print(f"Error in /generateCommitMessage: {e}")  # Log the error to the console for debugging
+        print(f"Error in /generateCommitMessage: {e}")
         return jsonify({"error": f"Internal Server Error: {str(e)}"}), 500
 
 if __name__ == '__main__':
     app.run(port=5000)
+
