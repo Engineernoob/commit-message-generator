@@ -3,6 +3,7 @@ from flask_cors import CORS
 import os
 import tempfile
 from commit_cli import (
+    get_persistent_temp_project_dir,
     load_config,
     setup_config,
     check_or_initialize_git_repo,
@@ -37,15 +38,15 @@ def setup_project():
 @app.route('/generateCommitMessage', methods=['POST'])
 def generate_commit():
     data = request.json
-    project_dir = data.get('projectDir') or get_persistent_temp_dir()
-    commit_type = data.get('commitType', 'feat')
-    custom_message = data.get('customMessage', '')
-    auto_commit = data.get('autoCommit', False)  # New parameter to auto-commit
+    project_dir = data.get('projectDir') or get_persistent_temp_project_dir()
+    commit_type = data.get('commitType', '')  # Allow empty commit type
+    custom_message = data.get('customMessage', '')  # Allow empty custom message
+    auto_commit = data.get('autoCommit', False)  # Optional, for auto-commit
 
     if not os.path.isdir(project_dir):
         return jsonify({"error": "Invalid project directory specified."}), 400
 
-    # Load configuration, and prompt to create a new one if none is found
+    # Load configuration
     config = load_config(project_dir)
     if not config:
         return jsonify({"error": "No configuration file found and creation declined."}), 400

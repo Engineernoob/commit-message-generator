@@ -9,10 +9,14 @@ from model import generate_commit_message, get_git_changes, analyze_diff  # Impo
 # Set the configuration file name
 CONFIG_FILE = "project_config.json"
 
-def get_temp_project_dir():
-    """Creates and returns a temporary project directory for testing or if none is specified."""
-    temp_dir = tempfile.mkdtemp(prefix="CommitMessageProject_")
-    print(f"Temporary project directory created at: {temp_dir}")
+def get_persistent_temp_project_dir():
+    """Returns a persistent temporary directory for storing the configuration file and project settings."""
+    temp_dir = os.path.join(tempfile.gettempdir(), "CommitMessageProject")
+    if not os.path.exists(temp_dir):
+        os.makedirs(temp_dir)
+        print(f"Persistent temporary project directory created at: {temp_dir}")
+    else:
+        print(f"Using existing project directory at: {temp_dir}")
     return temp_dir
 
 def load_config(project_dir):
@@ -32,9 +36,9 @@ def load_config(project_dir):
 def setup_config(project_dir):
     """Prompts the user to set up configuration for a specified project directory and saves it."""
     config = {}
-    config["language"] = input("Enter the primary programming language (e.g., Python, JavaScript): ")
+    config["language"] = input("Enter the primary programming language (e.g., Python, JavaScript, Rust, None): ")
     config["framework"] = input("Enter the front-end framework (e.g., React, Angular, Vue, None): ")
-    config["specialization"] = input("Enter your specialization (e.g., AI, Front-end, Backend): ")
+    config["specialization"] = input("Enter your specialization (e.g., AI, Front-end, Backend, Full-stack, None): ")
 
     os.makedirs(project_dir, exist_ok=True)
     
@@ -99,6 +103,10 @@ def generate_commit_message_for_frontend(commit_type, custom_message, project_di
     Returns:
     A generated commit message string.
     """
+    # Use default commit type if not provided
+    commit_type = commit_type or 'chore'
+    custom_message = custom_message or ''  # Allow the model to generate a message without a custom message
+
     # Load the configuration for the project
     config = load_config(project_dir)
     language = config.get("language", "Unknown")
@@ -124,9 +132,10 @@ def generate_commit_message_for_frontend(commit_type, custom_message, project_di
 
     return commit_message
 
+
 def main():
     parser = argparse.ArgumentParser(description="Generate AI-based git commit messages.")
-    parser.add_argument("project_dir", type=str, nargs='?', default=get_temp_project_dir(),
+    parser.add_argument("project_dir", type=str, nargs='?', default=get_persistent_temp_project_dir(),
                         help="Path to the project directory. Creates a temporary directory if not provided.")
     group = parser.add_mutually_exclusive_group(required=True)
     group.add_argument("--generate", action="store_true", help="Generate a commit message based on changes")
