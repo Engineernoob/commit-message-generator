@@ -1,0 +1,7 @@
+{
+  "language": "Unknown",
+  "framework": "Unknown",
+  "specialization": "Generalist",
+  "provider": "ollama",
+  "model": "qwen3:1.7b"
+}

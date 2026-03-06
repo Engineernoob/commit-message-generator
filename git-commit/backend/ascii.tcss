@@ -1,0 +1,82 @@
+/* ─── Global ─────────────────────────────────────────────────────────────── */
+
+Screen {
+    background: #0b0b0b;
+    color:       #2fff2f;
+}
+
+Header, Footer {
+    background: #0b0b0b;
+    color:      #2fff2f;
+}
+
+/* ─── Root layout ────────────────────────────────────────────────────────── */
+
+#root {
+    layout:  vertical;
+    padding: 0 0;
+    height:  1fr;
+}
+
+#banner {
+    display: none;
+}
+
+/* ─── Arena ──────────────────────────────────────────────────────────────── */
+/*                                                                             */
+/*  - height 1fr  → fills all space not taken by the console                  */
+/*  - overflow hidden  → no scrollbars; content is pre-sized to fit           */
+/*  - content-align left top + text-align left  → raw ASCII anchors top-left  */
+/*    so the corridor perspective renders without extra centering padding      */
+/*                                                                             */
+
+#arena {
+    border:         tall #3a3a3a;
+    background:     #080808;
+    color:          #2fff2f;
+    height:         1fr;
+    overflow:       hidden hidden;
+    text-align:     left;
+    content-align:  left top;
+    padding:        0 1;
+}
+
+/* ─── Console ────────────────────────────────────────────────────────────── */
+
+#console {
+    border:     tall #3a3a3a;
+    background: #0b0b0b;
+    color:      #f2b441;
+    height:     18;
+    padding:    0 2;
+}
+
+#log {
+    border:     none;
+    background: #0b0b0b;
+    color:      #f2b441;
+    height:     1fr;
+    padding:    0 0;
+}
+
+#cmdrow {
+    margin-top: 1;
+    height:     1;
+}
+
+#prompt {
+    width:          3;
+    content-align:  left middle;
+    color:          #f2b441;
+}
+
+Input {
+    border:     none;
+    background: #0b0b0b;
+    color:      #f2b441;
+    padding:    0 0;
+}
+
+Input:focus {
+    border: none;
+}
